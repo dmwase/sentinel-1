@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="description" content="SentinelMesh - AI-Native Cybersecurity Operations Platform demo">
+<title>SentinelMesh - AI-Native Security Operations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0A0E14;
+    --panel: #121822;
+    --panel-light: #161D29;
+    --border: #1E2733;
+    --text: #E6EAF0;
+    --text-muted: #94A3B8;
+    --text-dim: #5B6678;
+    --critical: #E94F37;
+    --warning: #F2A33E;
+    --safe: #3DDC97;
+    --info: #5B8DEF;
+    --font-display: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .app {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    min-height: 100vh;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    padding: 28px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .logo {
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .logo-mark {
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    background: linear-gradient(135deg, var(--safe), var(--info));
+    flex-shrink: 0;
+    position: relative;
+  }
+  .logo-mark::after {
+    content: '';
+    position: absolute;
+    inset: 5px;
+    border-radius: 2px;
+    background: var(--bg);
+  }
+
+  .logo-sub {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 28px;
+  }
+
+  .nav-section-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--text-dim);
+    margin: 18px 0 8px 10px;
+    font-weight: 600;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 6px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.15s, color 0.15s;
+    border: 1px solid transparent;
+    user-select: none;
+  }
+
+  .nav-item:hover { background: var(--panel-light); color: var(--text); }
+
+  .nav-item.active {
+    background: var(--panel-light);
+    color: var(--text);
+    border-color: var(--border);
+  }
+
+  .nav-item.active .nav-dot {
+    background: var(--safe);
+    box-shadow: 0 0 8px var(--safe);
+  }
+
+  .nav-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    flex-shrink: 0;
+  }
+
+  .nav-badge {
+    margin-left: auto;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    background: var(--critical);
+    color: var(--bg);
+    font-weight: 600;
+  }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  .org-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: var(--panel-light);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  .org-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, var(--info), #8B5CF6);
+    flex-shrink: 0;
+  }
+
+  .org-name { font-family: var(--font-display); font-size: 12px; color: var(--text); font-weight: 600; }
+  .org-tier { font-size: 10px; color: var(--text-dim); }
+
+  /* MAIN */
+  .main {
+    padding: 28px 36px 60px;
+    overflow-x: hidden;
+    min-width: 0;
+  }
+
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .topbar h1 {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+  }
+
+  .topbar p { color: var(--text-muted); font-size: 13px; max-width: 540px; }
+
+  .status-strip {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    white-space: nowrap;
+  }
+
+  .pulse-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--safe);
+    box-shadow: 0 0 0 0 rgba(61,220,151,0.6);
+    animation: pulse-ring 2s infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes pulse-ring {
+    0%   { box-shadow: 0 0 0 0   rgba(61,220,151,0.5); }
+    70%  { box-shadow: 0 0 0 8px rgba(61,220,151,0);   }
+    100% { box-shadow: 0 0 0 0   rgba(61,220,151,0);   }
+  }
+
+  /* METRIC GRID */
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .metric-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    overflow: hidden;
+  }
+
+  .metric-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+
+  .metric-value {
+    font-family: var(--font-display);
+    font-size: 30px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .metric-value small { font-size: 13px; font-weight: 500; color: var(--text-dim); }
+
+  .metric-trend { font-size: 11px; }
+  .trend-up   { color: var(--critical); }
+  .trend-down { color: var(--safe); }
+  .trend-flat { color: var(--text-dim); }
+
+  /* PANEL LAYOUT */
+  .panel-row {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    min-width: 0;
+  }
+
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .panel-title { font-family: var(--font-display); font-size: 15px; font-weight: 600; }
+  .panel-meta  { font-size: 11px; color: var(--text-dim); }
+
+  /* THREAT PULSE */
+  .pulse-map {
+    position: relative;
+    height: 280px;
+    border-radius: 8px;
+    background: var(--panel-light);
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .pulse-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 32px 32px;
+    opacity: 0.4;
+  }
+
+  .pulse-node {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .pulse-node::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    animation: ripple-out 2.4s ease-out infinite;
+  }
+
+  .pulse-node.crit { background: var(--critical); }
+  .pulse-node.crit::before { background: var(--critical); }
+  .pulse-node.warn { background: var(--warning); }
+  .pulse-node.warn::before { background: var(--warning); }
+  .pulse-node.safe { background: var(--info); }
+  .pulse-node.safe::before { background: var(--info); }
+
+  @keyframes ripple-out {
+    0%   { transform: scale(1); opacity: 0.6; }
+    100% { transform: scale(6); opacity: 0;   }
+  }
+
+  .pulse-label {
+    position: absolute;
+    bottom: 14px;
+    left: 16px;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .pulse-count {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    font-family: var(--font-display);
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .pulse-count strong { color: var(--critical); font-size: 18px; }
+
+  /* EVENT LOG */
+  .event-log {
+    height: 280px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .event-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 9px 10px;
+    border-radius: 6px;
+    background: var(--panel-light);
+    border-left: 2px solid var(--border);
+    font-size: 12px;
+    animation: slide-in 0.4s ease;
+    flex-shrink: 0;
+  }
+
+  @keyframes slide-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0);    }
+  }
+
+  .event-row.sev-critical { border-left-color: var(--critical); }
+  .event-row.sev-warning  { border-left-color: var(--warning);  }
+  .event-row.sev-info     { border-left-color: var(--info);     }
+  .event-row.sev-resolved { border-left-color: var(--safe);     }
+
+  .event-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+    background: var(--bg);
+  }
+
+  .event-body  { flex: 1; min-width: 0; }
+  .event-title { color: var(--text); font-weight: 500; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .event-meta  { color: var(--text-dim); font-size: 11px; }
+  .event-time  { color: var(--text-dim); font-size: 11px; white-space: nowrap; flex-shrink: 0; }
+
+  /* MODULE GRID */
+  .module-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .module-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    min-width: 0;
+  }
+
+  .module-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+    gap: 8px;
+  }
+
+  .module-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+
+  .module-title { font-family: var(--font-display); font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .module-sub   { font-size: 11px; color: var(--text-dim); }
+
+  .status-chip {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .chip-active    { background: rgba(61,220,151,0.12);  color: var(--safe);     }
+  .chip-attention { background: rgba(242,163,62,0.12);  color: var(--warning);  }
+  .chip-critical  { background: rgba(233,79,55,0.12);   color: var(--critical); }
+
+  .module-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+
+  .module-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    padding: 8px 10px;
+    background: var(--panel-light);
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    gap: 8px;
+  }
+
+  .module-list-item .name   { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .module-list-item .detail { color: var(--text-dim); font-size: 11px; }
+
+  .severity-tag {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .tag-critical { background: rgba(233,79,55,0.15);  color: var(--critical); }
+  .tag-warning  { background: rgba(242,163,62,0.15); color: var(--warning);  }
+  .tag-info     { background: rgba(91,141,239,0.15); color: var(--info);     }
+  .tag-safe     { background: rgba(61,220,151,0.15); color: var(--safe);     }
+
+  .progress-bar  { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 10px; }
+  .progress-fill { height: 100%; border-radius: 3px; }
+
+  .ai-agent-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: var(--panel-light);
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    margin-top: 10px;
+  }
+
+  .ai-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, var(--safe), var(--info));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  .ai-text { flex: 1; min-width: 0; font-size: 12px; }
+  .ai-title  { color: var(--text); margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ai-detail { color: var(--text-dim); font-size: 11px; }
+
+  /* DEMO NOTE */
+  .demo-note {
+    margin-top: 24px;
+    padding: 14px 18px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .demo-note .tag {
+    background: var(--info);
+    color: var(--bg);
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    flex-shrink: 0;
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* RESPONSIVE */
+  @media (max-width: 1100px) {
+    .metric-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 900px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar { position: static; height: auto; flex-direction: row; flex-wrap: wrap; padding: 14px 16px; gap: 6px; }
+    .logo-sub, .nav-section-label, .sidebar-footer { display: none; }
+    .main { padding: 16px; }
+    .panel-row { grid-template-columns: 1fr; }
+    .module-grid { grid-template-columns: 1fr; }
+    .topbar { flex-direction: column; }
+  }
+
+  @media (max-width: 540px) {
+    .metric-grid { grid-template-columns: repeat(2, 1fr); }
+    .topbar h1 { font-size: 20px; }
+  }
+
+  /* Reduce motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" role="navigation" aria-label="Main navigation">
+    <div class="logo">
+      <div class="logo-mark" aria-hidden="true"></div>
+      SentinelMesh
+    </div>
+    <div class="logo-sub">Security Operations</div>
+
+    <div class="nav-section-label">Overview</div>
+    <div class="nav-item active" role="button" tabindex="0"><span class="nav-dot"></span> Command Center</div>
+    <div class="nav-item" role="button" tabindex="0"><span class="nav-dot"></span> Asset Inventory</div>
+
+    <div class="nav-section-label">Modules</div>
+    <div class="nav-item" role="button" tabindex="0"><span class="nav-dot"></span> SBOM &amp; Supply Chain <span class="nav-badge">3</span></div>
+    <div class="nav-item" role="button" tabindex="0"><span class="nav-dot"></span> Behavioral Anomalies</div>
+    <div class="nav-item" role="button" tabindex="0"><span class="nav-dot"></span> Deepfake &amp; Phishing</div>
+    <div class="nav-item" role="button" tabindex="0"><span class="nav-dot"></span> Autonomous SOC Agent</div>
+    <div class="nav-item" role="button" tabindex="0"><span class="nav-dot"></span> Threat Intelligence</div>
+    <div class="nav-item" role="button" tabindex="0"><span class="nav-dot"></span> IR Playbooks</div>
+
+    <div class="nav-section-label">Reports</div>
+    <div class="nav-item" role="button" tabindex="0"><span class="nav-dot"></span> Compliance Evidence</div>
+    <div class="nav-item" role="button" tabindex="0"><span class="nav-dot"></span> Audit Trail</div>
+
+    <div class="sidebar-footer">
+      <div class="org-pill">
+        <div class="org-avatar"></div>
+        <div>
+          <div class="org-name">Northwind Cloud Co.</div>
+          <div class="org-tier">Growth Plan &middot; 1,240 assets</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1>Command Center</h1>
+        <p>Unified visibility across supply chain, behavioral threats, and AI-generated attacks &mdash; with autonomous triage handling the noise so your team focuses on what matters.</p>
+      </div>
+      <div class="status-strip" aria-live="polite">
+        <span class="pulse-dot" aria-hidden="true"></span>
+        All systems monitoring &nbsp;&middot;&nbsp; Last sync: <span id="sync-time">just now</span>
+      </div>
+    </div>
+
+    <!-- METRICS -->
+    <div class="metric-grid" role="list" aria-label="Key metrics">
+      <div class="metric-card" role="listitem">
+        <div class="metric-label">Active Threats</div>
+        <div class="metric-value">7 <small>open</small></div>
+        <div class="metric-trend trend-down">&#8595; 12% vs. last week</div>
+      </div>
+      <div class="metric-card" role="listitem">
+        <div class="metric-label">SBOM Components Tracked</div>
+        <div class="metric-value">3,842</div>
+        <div class="metric-trend trend-flat">3 flagged for review</div>
+      </div>
+      <div class="metric-card" role="listitem">
+        <div class="metric-label">Auto-Resolved by AI Agent</div>
+        <div class="metric-value">214 <small>/ 230</small></div>
+        <div class="metric-trend" style="color: var(--safe);">93% triage automation</div>
+      </div>
+      <div class="metric-card" role="listitem">
+        <div class="metric-label">Deepfake Attempts Blocked</div>
+        <div class="metric-value">5 <small>this week</small></div>
+        <div class="metric-trend trend-up">&#8593; 2 vs. last week</div>
+      </div>
+    </div>
+
+    <!-- THREAT PULSE + EVENT LOG -->
+    <div class="panel-row">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Global Threat Pulse</div>
+          <div class="panel-meta">Live &middot; simulated feed</div>
+        </div>
+        <div class="pulse-map" id="pulse-map" role="img" aria-label="Animated threat activity map">
+          <div class="pulse-grid" aria-hidden="true"></div>
+          <div class="pulse-count" aria-live="polite"><strong id="pulse-total">0</strong> events / 24h</div>
+          <div class="pulse-label">Inbound signal density across monitored regions</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Live Event Log</div>
+          <div class="panel-meta" id="event-count" aria-live="polite">0 events</div>
+        </div>
+        <div class="event-log" id="event-log" role="log" aria-label="Security events" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <!-- MODULE GRID -->
+    <div class="module-grid">
+
+      <!-- SBOM -->
+      <div class="module-card">
+        <div class="module-card-header">
+          <div style="display:flex; gap:12px; min-width:0;">
+            <div class="module-icon" style="background: rgba(91,141,239,0.12); color: var(--info);" aria-hidden="true">&#128230;</div>
+            <div style="min-width:0;">
+              <div class="module-title">SBOM &amp; Supply Chain Monitor</div>
+              <div class="module-sub">3,842 components across 47 repos</div>
+            </div>
+          </div>
+          <span class="status-chip chip-attention">3 flagged</span>
+        </div>
+        <div class="module-list">
+          <div class="module-list-item">
+            <div style="min-width:0;">
+              <div class="name">left-pad-utils@4.2.1</div>
+              <div class="detail">New maintainer &middot; published 6h ago</div>
+            </div>
+            <span class="severity-tag tag-critical">Critical</span>
+          </div>
+          <div class="module-list-item">
+            <div style="min-width:0;">
+              <div class="name">log-shipper@2.9.0</div>
+              <div class="detail">CVE-2026-31840 disclosed</div>
+            </div>
+            <span class="severity-tag tag-warning">High</span>
+          </div>
+          <div class="module-list-item">
+            <div style="min-width:0;">
+              <div class="name">auth-connector@1.4.3</div>
+              <div class="detail">Unsigned binary diff detected</div>
+            </div>
+            <span class="severity-tag tag-warning">High</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Behavioral Anomalies -->
+      <div class="module-card">
+        <div class="module-card-header">
+          <div style="display:flex; gap:12px; min-width:0;">
+            <div class="module-icon" style="background: rgba(233,79,55,0.12); color: var(--critical);" aria-hidden="true">&#128202;</div>
+            <div style="min-width:0;">
+              <div class="module-title">Behavioral Anomaly Detection</div>
+              <div class="module-sub">ML baseline &middot; 1,240 endpoints</div>
+            </div>
+          </div>
+          <span class="status-chip chip-critical">1 active</span>
+        </div>
+        <div class="module-list">
+          <div class="module-list-item">
+            <div style="min-width:0;">
+              <div class="name">svc-billing-worker-07</div>
+              <div class="detail">Unusual outbound traffic to new ASN</div>
+            </div>
+            <span class="severity-tag tag-critical">Critical</span>
+          </div>
+          <div class="module-list-item">
+            <div style="min-width:0;">
+              <div class="name">j.alvarez@northwind</div>
+              <div class="detail">Login from new device + impossible travel</div>
+            </div>
+            <span class="severity-tag tag-warning">High</span>
+          </div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width: 71%; background: var(--info);"></div></div>
+        <div style="font-size:11px; color: var(--text-dim); margin-top:6px;">Model confidence: 71% &mdash; baseline retraining in 3h</div>
+      </div>
+
+      <!-- Deepfake / Phishing -->
+      <div class="module-card">
+        <div class="module-card-header">
+          <div style="display:flex; gap:12px; min-width:0;">
+            <div class="module-icon" style="background: rgba(242,163,62,0.12); color: var(--warning);" aria-hidden="true">&#127917;</div>
+            <div style="min-width:0;">
+              <div class="module-title">Deepfake &amp; Phishing Detection</div>
+              <div class="module-sub">Email, voice &amp; video channels</div>
+            </div>
+          </div>
+          <span class="status-chip chip-active">Monitoring</span>
+        </div>
+        <div class="module-list">
+          <div class="module-list-item">
+            <div style="min-width:0;">
+              <div class="name">Voicemail: CFO Urgent Wire Request</div>
+              <div class="detail">Synthetic voice score: 0.94 &mdash; blocked</div>
+            </div>
+            <span class="severity-tag tag-critical">Critical</span>
+          </div>
+          <div class="module-list-item">
+            <div style="min-width:0;">
+              <div class="name">Email: Invoice #88213 overdue</div>
+              <div class="detail">AI-generated phishing pattern detected</div>
+            </div>
+            <span class="severity-tag tag-warning">High</span>
+          </div>
+          <div class="module-list-item">
+            <div style="min-width:0;">
+              <div class="name">Teams call: external guest join</div>
+              <div class="detail">Video deepfake check passed</div>
+            </div>
+            <span class="severity-tag tag-safe">Clear</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Autonomous SOC Agent -->
+      <div class="module-card">
+        <div class="module-card-header">
+          <div style="display:flex; gap:12px; min-width:0;">
+            <div class="module-icon" style="background: rgba(61,220,151,0.12); color: var(--safe);" aria-hidden="true">&#129302;</div>
+            <div style="min-width:0;">
+              <div class="module-title">Autonomous SOC Agent</div>
+              <div class="module-sub">Tier-1 triage &amp; remediation</div>
+            </div>
+          </div>
+          <span class="status-chip chip-active">Active</span>
+        </div>
+        <div class="ai-agent-row">
+          <div class="ai-avatar" aria-hidden="true">&#9889;</div>
+          <div class="ai-text">
+            <div class="ai-title">Isolated endpoint svc-billing-worker-07</div>
+            <div class="ai-detail">Triggered by anomaly alert &middot; 2 min ago &middot; escalated to human review</div>
+          </div>
+        </div>
+        <div class="ai-agent-row">
+          <div class="ai-avatar" aria-hidden="true">&#9889;</div>
+          <div class="ai-text">
+            <div class="ai-title">Revoked OAuth token for j.alvarez@northwind</div>
+            <div class="ai-detail">Triggered by impossible-travel alert &middot; 4 min ago &middot; auto-resolved</div>
+          </div>
+        </div>
+        <div class="ai-agent-row">
+          <div class="ai-avatar" aria-hidden="true">&#9889;</div>
+          <div class="ai-text">
+            <div class="ai-title">Quarantined phishing email (88 recipients)</div>
+            <div class="ai-detail">Triggered by AI-phishing pattern match &middot; 11 min ago &middot; auto-resolved</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="demo-note" role="note">
+      <span class="tag">Demo</span>
+      All metrics, events, and module data shown on this page are simulated for demonstration purposes. No real network or customer data is processed.
+    </div>
+
+  </main>
+</div>
+
+<script>
+  'use strict';
+
+  // Threat Pulse nodes
+  var pulseMap   = document.getElementById('pulse-map');
+  var pulseTotal = document.getElementById('pulse-total');
+  var totalEvents = 1842;
+  pulseTotal.textContent = totalEvents.toLocaleString();
+
+  function spawnPulseNode() {
+    var node  = document.createElement('div');
+    var types = ['crit', 'warn', 'safe', 'safe', 'warn'];
+    var type  = types[Math.floor(Math.random() * types.length)];
+    node.className   = 'pulse-node ' + type;
+    node.style.left  = (10 + Math.random() * 80) + '%';
+    node.style.top   = (15 + Math.random() * 70) + '%';
+    node.setAttribute('aria-hidden', 'true');
+    pulseMap.appendChild(node);
+    totalEvents++;
+    pulseTotal.textContent = totalEvents.toLocaleString();
+    setTimeout(function() { if (node.parentNode) node.parentNode.removeChild(node); }, 2400);
+  }
+
+  setInterval(spawnPulseNode, 900);
+  for (var i = 0; i < 6; i++) { (function(d){ setTimeout(spawnPulseNode, d); }(i * 180)); }
+
+  // Event Log
+  var eventLog   = document.getElementById('event-log');
+  var eventCount = document.getElementById('event-count');
+
+  var eventTemplates = [
+    { sev: 'critical', icon: '\uD83D\uDED1', title: 'Suspicious outbound connection blocked',   meta: 'svc-billing-worker-07 \u2192 unrecognized ASN'        },
+    { sev: 'warning',  icon: '\u26A0\uFE0F',  title: 'New CVE matched against SBOM',             meta: 'log-shipper@2.9.0 \u00B7 CVE-2026-31840'           },
+    { sev: 'info',     icon: '\u2139\uFE0F',  title: 'Dependency update detected',               meta: 'auth-connector bumped 1.4.2 \u2192 1.4.3'          },
+    { sev: 'resolved', icon: '\u2705',        title: 'Phishing email auto-quarantined',          meta: 'AI agent \u00B7 88 recipients protected'            },
+    { sev: 'warning',  icon: '\uD83C\uDFAD', title: 'Synthetic voice detected in voicemail',    meta: 'Caller ID spoofed as CFO Office'                    },
+    { sev: 'critical', icon: '\uD83D\uDED1', title: 'Impossible travel login flagged',           meta: 'j.alvarez@northwind \u00B7 Lagos \u2192 Toronto 4m' },
+    { sev: 'info',     icon: '\u2139\uFE0F',  title: 'Threat intel feed updated',                meta: '14 new APT-29 indicators ingested'                  },
+    { sev: 'resolved', icon: '\u2705',        title: 'Endpoint isolated and restored',           meta: 'svc-billing-worker-07 \u00B7 clean scan'            },
+    { sev: 'warning',  icon: '\uD83D\uDCE6', title: 'New maintainer on critical dependency',    meta: 'left-pad-utils@4.2.1 \u00B7 review required'        },
+    { sev: 'info',     icon: '\u2139\uFE0F',  title: 'IR playbook executed',                     meta: 'Ransomware containment \u00B7 stage 1 of 4'         },
+  ];
+
+  var eventsAdded = 0;
+
+  function addEvent() {
+    var tmpl = eventTemplates[Math.floor(Math.random() * eventTemplates.length)];
+    var row  = document.createElement('div');
+    row.className = 'event-row sev-' + tmpl.sev;
+
+    var now  = new Date();
+    var time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+    var icon   = document.createElement('div');
+    icon.className   = 'event-icon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = tmpl.icon;
+
+    var body  = document.createElement('div');
+    body.className = 'event-body';
+
+    var title = document.createElement('div');
+    title.className   = 'event-title';
+    title.textContent = tmpl.title;
+
+    var meta  = document.createElement('div');
+    meta.className   = 'event-meta';
+    meta.textContent = tmpl.meta;
+
+    var ts   = document.createElement('div');
+    ts.className   = 'event-time';
+    ts.textContent = time;
+
+    body.appendChild(title);
+    body.appendChild(meta);
+    row.appendChild(icon);
+    row.appendChild(body);
+    row.appendChild(ts);
+
+    if (eventLog.firstChild) {
+      eventLog.insertBefore(row, eventLog.firstChild);
+    } else {
+      eventLog.appendChild(row);
+    }
+
+    eventsAdded++;
+    eventCount.textContent = eventsAdded + ' events this session';
+
+    while (eventLog.children.length > 12) {
+      eventLog.removeChild(eventLog.lastChild);
+    }
+  }
+
+  for (var j = 0; j < 4; j++) addEvent();
+  setInterval(addEvent, 4000);
+
+  // Sync time ticker
+  var syncEl  = document.getElementById('sync-time');
+  var syncSec = 0;
+  setInterval(function() {
+    syncSec++;
+    if (syncSec < 60) {
+      syncEl.textContent = syncSec + 's ago';
+    } else {
+      syncEl.textContent = Math.floor(syncSec / 60) + 'm ago';
+    }
+    if (syncSec >= 30) { syncSec = 0; }
+  }, 1000);
+</script>
+</body>
+</html>
